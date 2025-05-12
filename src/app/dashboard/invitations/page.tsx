@@ -34,7 +34,7 @@ type InviteFormValues = z.infer<typeof inviteSchema>;
 export default function InvitationsPage() {
   const { toast } = useToast();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const form = useForm<InviteFormValues>({
@@ -56,7 +56,7 @@ export default function InvitationsPage() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setLoading(true);
     }
   }, [toast]);
 
@@ -100,7 +100,6 @@ export default function InvitationsPage() {
         description: "Invitation link copied to clipboard",
       });
       
-      // Reset the copied state after 2 seconds
       setTimeout(() => {
         setCopiedId(null);
       }, 2000);

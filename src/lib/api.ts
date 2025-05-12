@@ -2,6 +2,7 @@
 
 import { Feedback, Invitation, User, FeedbackStatus } from './types';
 import { mockFeedback, mockInvitations, mockUsers } from './mock-data';
+import { InvitationStatus } from './enums';
 
 // Mock API functions
 // These would make actual API calls when NestJS backend is integrated
@@ -110,7 +111,7 @@ export const createInvitation = async (email: string) => {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
     createdAt: new Date().toISOString(),
     createdBy: '1',
-    status: 'pending',
+    status: InvitationStatus.PENDING,
   };
    
   return newInvitation;

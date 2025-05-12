@@ -14,7 +14,6 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication
     const token = localStorage.getItem("auth-token");
     if (!token) {
       router.push("/");

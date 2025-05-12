@@ -22,7 +22,7 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const toggleMobile = () => setMobileOpen(!mobileOpen);
+  const toggleMobile = () => setMobileOpen(mobileOpen => !mobileOpen);
   const closeMobile = () => setMobileOpen(false);
 
   const items = [
