@@ -1,6 +1,6 @@
 "use client";
 
-import { Feedback, Invitation, User, FeedbackStatus } from './types';
+import { Invitation, FeedbackStatus } from './types';
 import { mockFeedback, mockInvitations, mockUsers } from './mock-data';
 import { InvitationStatus } from './enums';
 

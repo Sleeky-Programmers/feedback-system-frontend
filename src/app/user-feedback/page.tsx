@@ -1,18 +1,48 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-
+import { Suspense } from 'react';
+interface CustomError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
 
 export default function FeedbackFormPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FeedbackFormContent />
+    </Suspense>
+  );
+}
 
-  const [content, setContent] = useState('');
+function FeedbackFormContent() {
+
+    const [content, setContent] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isClient, setIsClient] = useState(false);
+  const searchParams = useSearchParams();
+    
+    useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return <div>Loading...</div>;
+  }
+
+  const token = searchParams.get('token');
+
+
+
+
+  
 
   const handleSubmit = async () => {
     if (!token) {
@@ -45,10 +75,16 @@ export default function FeedbackFormPage() {
         setStatus('error');
         setErrorMessage('Something went wrong.');
       }
-    } catch (err: any) {
-      setStatus('error');
-      setErrorMessage(err?.response?.data?.message || 'Server error.');
-    } finally {
+  } catch (error: unknown) {
+  setStatus('error');
+  const errorMsg = 
+    (typeof error === 'object' && error !== null && 'response' in error) 
+      ? (error as CustomError).response?.data?.message || (error as unknown as Error).message
+      : error instanceof Error 
+        ? error.message 
+        : 'Server error.';
+  setErrorMessage(errorMsg);
+} finally {
       setSubmitting(false);
     }
   };
