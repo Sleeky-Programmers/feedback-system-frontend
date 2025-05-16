@@ -186,7 +186,7 @@ export default function FeedbackDetailsPage({ params }: { params: { id: string }
     <SelectTrigger className="w-full">
       <SelectValue placeholder="Select a status" />
     </SelectTrigger>
-    <SelectContent className="z-50"> {/* add this */}
+    <SelectContent className="z-50"> 
       <SelectItem value="pending">Pending</SelectItem>
       <SelectItem value="addressed">Addressed</SelectItem>
       <SelectItem value="unresolved">Unresolved</SelectItem>

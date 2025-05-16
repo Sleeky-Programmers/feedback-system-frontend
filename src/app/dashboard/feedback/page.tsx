@@ -37,15 +37,12 @@ export default function FeedbackPage() {
   }, []);
 
   useEffect(() => {
-    // Filter by search and status
     let result = [...feedback];
     
-    // Apply status filter if not "all"
     if (activeTab !== "all") {
       result = result.filter(item => item.status === activeTab);
     }
     
-    // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(item => 

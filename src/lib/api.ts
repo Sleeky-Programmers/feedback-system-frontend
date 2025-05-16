@@ -10,9 +10,9 @@ import { InvitationStatus } from './enums';
 // Auth functions
 export const login = async (email: string, password: string) => {
   // This is a mock implementation
-  await new Promise(resolve => setTimeout(resolve, 800));
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
-  if (email === 'admin@example.com' && password === 'password123') {
+  if (email === 'admin1@example.com' && password === '@admin123') {
     return { success: true, token: 'mock-jwt-token' };
   }
   

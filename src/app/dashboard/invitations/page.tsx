@@ -46,6 +46,7 @@ export default function InvitationsPage() {
 
   const loadInvitations = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await getInvitations();
       setInvitations(data);
     } catch (error) {
@@ -56,7 +57,7 @@ export default function InvitationsPage() {
         variant: "destructive",
       });
     } finally {
-      setLoading(true);
+      setLoading(false);
     }
   }, [toast]);
 

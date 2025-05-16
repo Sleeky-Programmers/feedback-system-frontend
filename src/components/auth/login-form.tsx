@@ -33,7 +33,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const loginUser = async (credentials: LoginFormValues): Promise<{ success: boolean, token?: string }> => {
   await new Promise(resolve => setTimeout(resolve, 1000));
   
-  if (credentials.email === "admin@example.com" && credentials.password === "password123") {
+  if (credentials.email === "admin1@example.com" && credentials.password === "@admin123") {
     return { success: true, token: "mock-jwt-token" };
   }
   
@@ -147,8 +147,8 @@ export function LoginForm() {
       {/* Demo Hint */}
       <div className="text-center text-sm text-[#6B7280] pt-2">
         <p>Demo credentials:</p>
-        <p className="text-[#111827]">admin@example.com</p>
-        <p className="text-[#111827]">password123</p>
+        <p className="text-[#111827]">admin1@example.com</p>
+        <p className="text-[#111827]">@admin123</p>
       </div>
     </div>
   );
