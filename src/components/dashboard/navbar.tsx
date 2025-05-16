@@ -1,20 +1,13 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import {
-  Bell,
-  Moon,
-  Sun,
-  Settings,
   Search,
 } from "lucide-react";
 import { SettingsSheet } from "./settings-sheet";
 import { NotificationsSheet } from "./notifications-sheet";
 
 export function Navbar() {
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

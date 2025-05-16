@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,8 +15,10 @@ import { Feedback, FeedbackStatus } from "@/lib/types";
 import { getFeedbackById, updateFeedbackStatus, assignFeedback, getAdminUsers } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
-export default function FeedbackDetailsPage({ params }: { params: { id: string } }) {
+
+export default function FeedbackDetailsPage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
   const { toast } = useToast();
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(true);
@@ -124,9 +125,9 @@ export default function FeedbackDetailsPage({ params }: { params: { id: string }
     return (
       <div className="p-6">
         <Alert variant="destructive">
-          <AlertDescription>
-            Feedback not found. It may have been deleted or you don't have permission to view it.
-          </AlertDescription>
+        <AlertDescription>
+        Feedback not found. It may have been deleted or you don&apos;t have permission to view it.
+      </AlertDescription>
         </Alert>
         <Button variant="ghost" className="mt-4" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Go Back

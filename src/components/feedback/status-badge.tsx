@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import { FeedbackStatus } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, XCircle } from "lucide-react";
 
 interface StatusBadgeProps {
