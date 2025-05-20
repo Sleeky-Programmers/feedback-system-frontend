@@ -1,42 +1,56 @@
+"use client";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card";
+import {Alert, AlertDescription, AlertTitle,} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  MessageSquare,
-  CheckCircle,
-  XCircle,
-  Clock,
-  UserPlus,
-  ArrowRight,
-} from "lucide-react";
+import {MessageSquare, CheckCircle, XCircle, Clock, UserPlus, ArrowRight,} from "lucide-react";
+import { useEffect, useState } from "react";
+import { getFeedbackStats, getProfile } from "@/lib/api";
 
 export default function DashboardPage() {
-  const stats = {
-    totalFeedback: 6,
-    pending: 3,
-    addressed: 2,
-    unresolved: 1,
-    recentInvitations: 1,
-  };
+   const [profile, setProfile] = useState<any>(null);
+   const [stats, setStats] = useState({
+    totalFeedback: 0,
+    pending: 0,
+    addressed: 0,
+    unresolved: 0,
+    recentInvitations: 0,
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const data = await getFeedbackStats();
+        setStats({
+          ...data,
+          recentInvitations: data.recentInvitations ?? 0,
+        });
+      } catch (err) {
+        return(err);
+      }
+    }
+
+    fetchStats();
+  }, []);
+
+   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getProfile();
+        setProfile(data);
+      } catch (err) {
+        
+      }
+    };
+
+    fetchProfile();
+  }, []);
+   if (!profile) return <p>Loading...</p>;
 
   return (
     <div className="p-6 md:p-8 space-y-10 ">
       <div className="space-y-1">
         <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Welcome to your feedback management dashboard.
-        </p>
       </div>
 
       {/* Stats Cards */}

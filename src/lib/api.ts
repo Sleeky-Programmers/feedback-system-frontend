@@ -1,23 +1,48 @@
 "use client";
-
+import api from './axios';
 import { Invitation, FeedbackStatus } from './types';
 import { mockFeedback, mockInvitations, mockUsers } from './mock-data';
 import { InvitationStatus } from './enums';
 
-// Mock API functions
-// These would make actual API calls when NestJS backend is integrated
+// API functions
 
-// Auth functions
-export const login = async (email: string, password: string) => {
-  // This is a mock implementation
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  if (email === 'admin1@example.com' && password === '@admin123') {
-    return { success: true, token: 'mock-jwt-token' };
-  }
-  
-  throw new Error('Invalid credentials');
+export const loginUser = async (credentials: { email: string; password: string }) => {
+  const response = await api.post('/auth/login', credentials);
+  const data = response.data as { access_token: string };
+  return { success: true, token: data.access_token };
 };
+
+export const getProfile = async () => {
+  const token = localStorage.getItem('auth-token');
+
+  const response = await api.get('/auth/profile', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+};
+
+
+export async function getFeedbackStats(): Promise<{
+  totalFeedback: number;
+  pending: number;
+  addressed: number;
+  unresolved: number;
+  recentInvitations: number;
+}> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/feedback/stats`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch stats");
+
+  return res.json();
+}
 
 // Feedback functions
 export const getFeedbackList = async (filters?: { status?: FeedbackStatus }) => {
