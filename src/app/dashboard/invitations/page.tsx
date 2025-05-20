@@ -91,7 +91,7 @@ export default function InvitationsPage() {
 
   const copyInvitationLink = (invitation: Invitation) => {
     // this would be a link application with the token
-    const inviteLink = `https://fs.com/invitation?token=${invitation.token}`;
+    const inviteLink = `https://feedback-system.com/invitation?token=${invitation.token}`;
     
     navigator.clipboard.writeText(inviteLink).then(() => {
       setCopiedId(invitation.id);
