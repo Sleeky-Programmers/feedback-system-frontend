@@ -26,30 +26,37 @@ export default function FeedbackDetailsPage() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [assigneeUpdating, setAssigneeUpdating] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [feedbackData, admins] = await Promise.all([
-          getFeedbackById(params.id),
-          getAdminUsers()
-        ]);
-        
-        setFeedback(feedbackData);
-        setAdminUsers(admins.map(user => ({ id: user.id, name: user.name })));
-      } catch (error) {
-        console.error("Failed to load data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load feedback details",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      const [feedbackData, admins] = await Promise.all([
+        getFeedbackById(params.id),
+        getAdminUsers()
+      ]);
 
-    loadData();
-  }, [params.id, toast]);
+      setFeedback(feedbackData);
+
+      setAdminUsers(
+        admins.map((user: any) => ({
+          id: user._id,              
+          name: user.name || user.email, 
+        }))
+      );
+    } catch (error) {
+      console.error("Failed to load data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load feedback details",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadData();
+}, [params.id, toast]);
+
 
   const handleStatusChange = async (newStatus: FeedbackStatus) => {
     if (!feedback) return;
@@ -57,7 +64,7 @@ export default function FeedbackDetailsPage() {
     setStatusUpdating(true);
     try {
       const updatedFeedback = await updateFeedbackStatus(feedback.id, newStatus);
-      setFeedback(updatedFeedback);
+      setFeedback(updatedFeedback as Feedback);
       toast({
         title: "Status updated",
         description: `Feedback status has been updated to ${newStatus}`,
@@ -74,28 +81,34 @@ export default function FeedbackDetailsPage() {
     }
   };
 
-  const handleAssigneeChange = async (assigneeId: string) => {
-    if (!feedback) return;
+const handleAssigneeChange = async (assignee: string, feedbackId: string) => {
+  if (!feedback) return;
+  
+  setAssigneeUpdating(true);
+  try {
+    await assignFeedback(feedbackId, assignee === "unassigned" ? "" : assignee);
+    const refreshedFeedback = await getFeedbackById(feedbackId);
+    setFeedback(refreshedFeedback);
+
+    toast({
+      title: "Assignment updated",
+      description: assignee === "unassigned" 
+        ? "Feedback has been unassigned" 
+        : "Feedback has been assigned successfully",
+    });
     
-    setAssigneeUpdating(true);
-    try {
-      const updatedFeedback = await assignFeedback(feedback.id, assigneeId);
-      setFeedback(updatedFeedback);
-      toast({
-        title: "Assignment updated",
-        description: "Feedback has been assigned to a new admin",
-      });
-    } catch (error) {
-      console.error("Failed to update assignee:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update assignee",
-        variant: "destructive",
-      });
-    } finally {
-      setAssigneeUpdating(false);
-    }
-  };
+  } catch (error) {
+    console.error("Failed to update assignee:", error);
+    toast({
+      title: "Error",
+      description: "Failed to update assignee",
+      variant: "destructive",
+    });
+  } finally {
+    setAssigneeUpdating(false);
+  }
+};
+
 
   if (loading) {
     return (
@@ -150,7 +163,7 @@ export default function FeedbackDetailsPage() {
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <CardTitle className="flex items-center gap-2">
-                {feedback.anonymous ? (
+                {feedback.isAnonymous ? (
                   <div className="flex items-center">
                     <UserX className="h-5 w-5 mr-1 text-muted-foreground" />
                     <span>Anonymous Feedback</span>
@@ -158,7 +171,7 @@ export default function FeedbackDetailsPage() {
                 ) : (
                   <div className="flex items-center">
                     <User className="h-5 w-5 mr-1" />
-                    <span>{feedback.createdByUser?.name}</span>
+                    <span>{feedback.createdBy}</span>
                   </div>
                 )}
               </CardTitle>
@@ -171,7 +184,7 @@ export default function FeedbackDetailsPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="rounded-md bg-muted/50 p-4">
-            <p className="whitespace-pre-wrap">{feedback.content}</p>
+            <p className="whitespace-pre-wrap">{feedback.message}</p>
           </div>
           
           <Separator />
@@ -180,9 +193,7 @@ export default function FeedbackDetailsPage() {
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Status</h3>
               <Select
-    disabled={statusUpdating}
-    value={feedback.status}
-    onValueChange={(value) => handleStatusChange(value as FeedbackStatus)}
+   onValueChange={handleStatusChange} defaultValue={feedback.status} disabled={statusUpdating}
   >
     <SelectTrigger className="w-full">
       <SelectValue placeholder="Select a status" />
@@ -199,21 +210,24 @@ export default function FeedbackDetailsPage() {
               <h3 className="text-sm font-medium">Assigned To</h3>
               <Select
             disabled={assigneeUpdating}
-            value={feedback.assigneeId || "unassigned"}
+            value={typeof feedback.assignee === "string"
+              ? feedback.assignee
+              : feedback.assignee?.id || "unassigned"}
             onValueChange={(value) => {
-            handleAssigneeChange(value === "unassigned" ? "" : value);
+            handleAssigneeChange(value === "unassigned" ? "" : value, feedback.id);
             }}
         >
             <SelectTrigger className="w-full">
             <SelectValue placeholder="Assign to admin" />
             </SelectTrigger>
-            <SelectContent className="z-50"> {/* add this */}
+            <SelectContent className="z-50">
             <SelectItem value="unassigned">Unassigned</SelectItem>
-            {adminUsers.map((admin) => (
-                <SelectItem key={admin.id} value={admin.id}>
-                {admin.name}
-                </SelectItem>
-            ))}
+          {adminUsers.map((admin, index) => (
+        <SelectItem key={admin.id || index} value={admin.id}>
+          {admin.name}
+        </SelectItem>
+      ))}
+
             </SelectContent>
         </Select>
 
