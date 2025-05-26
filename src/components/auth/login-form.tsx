@@ -7,16 +7,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { loginUser } from "@/lib/api";
+
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -28,17 +23,6 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-
-// Mock login function (replace with actual API call)
-const loginUser = async (credentials: LoginFormValues): Promise<{ success: boolean, token?: string }> => {
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  if (credentials.email === "admin@example.com" && credentials.password === "password123") {
-    return { success: true, token: "mock-jwt-token" };
-  }
-  
-  return { success: false };
-};
 
 export function LoginForm() {
   const router = useRouter();
@@ -147,8 +131,8 @@ export function LoginForm() {
       {/* Demo Hint */}
       <div className="text-center text-sm text-[#6B7280] pt-2">
         <p>Demo credentials:</p>
-        <p className="text-[#111827]">admin@example.com</p>
-        <p className="text-[#111827]">password123</p>
+        <p className="text-[#111827]">admin1@example.com</p>
+        <p className="text-[#111827]">@admin123</p>
       </div>
     </div>
   );

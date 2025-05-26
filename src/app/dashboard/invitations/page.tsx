@@ -46,6 +46,7 @@ export default function InvitationsPage() {
 
   const loadInvitations = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await getInvitations();
       setInvitations(data);
     } catch (error) {
@@ -56,7 +57,7 @@ export default function InvitationsPage() {
         variant: "destructive",
       });
     } finally {
-      setLoading(true);
+      setLoading(false);
     }
   }, [toast]);
 
@@ -88,23 +89,24 @@ export default function InvitationsPage() {
     }
   };
 
-  const copyInvitationLink = (invitation: Invitation) => {
-    // this would be a link application with the token
-    const inviteLink = `https://fs.com/invitation?token=${invitation.token}`;
-    
-    navigator.clipboard.writeText(inviteLink).then(() => {
-      setCopiedId(invitation.id);
-      
-      toast({
-        title: "Link copied",
-        description: "Invitation link copied to clipboard",
-      });
-      
-      setTimeout(() => {
-        setCopiedId(null);
-      }, 2000);
+const copyInvitationLink = (invitation: Invitation) => {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const inviteLink = `${siteUrl}/invitation?token=${invitation.token}`;
+
+  navigator.clipboard.writeText(inviteLink).then(() => {
+    setCopiedId(invitation.id);
+
+    toast({
+      title: "Link copied",
+      description: "Invitation link copied to clipboard",
     });
-  };
+
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 2000);
+  });
+};
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {

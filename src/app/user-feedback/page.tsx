@@ -1,18 +1,53 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import axios from 'axios';
 
+interface CustomError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
 
 export default function FeedbackFormPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FeedbackFormContent />
+    </Suspense>
+  );
+}
 
+function FeedbackFormContent() {
   const [content, setContent] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
+
+  useEffect(() => {
+    const validateToken = async () => {
+      if (!token) {
+        setStatus('error');
+        setErrorMessage('Invalid or missing token.');
+        return;
+      }
+
+      try {
+        await axios.get(`/api/invitations/validate/${token}`);
+      } catch (err) {
+        setStatus('error');
+        setErrorMessage('This feedback link is invalid or has already been used.');
+      }
+    };
+
+    validateToken();
+  }, [token]);
 
   const handleSubmit = async () => {
     if (!token) {
@@ -33,7 +68,7 @@ export default function FeedbackFormPage() {
 
       const response = await axios.post('/api/feedback/submit', {
         token,
-        content,
+        message: content,
         isAnonymous,
       });
 
@@ -45,13 +80,24 @@ export default function FeedbackFormPage() {
         setStatus('error');
         setErrorMessage('Something went wrong.');
       }
-    } catch (err: any) {
+    } catch (error: unknown) {
       setStatus('error');
-      setErrorMessage(err?.response?.data?.message || 'Server error.');
+      const errorMsg =
+        (typeof error === 'object' &&
+          error !== null &&
+          'response' in error &&
+          (error as CustomError).response?.data?.message) ||
+        (error as Error).message ||
+        'Server error.';
+      setErrorMessage(errorMsg);
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (status === 'error') {
+    return <p className="text-red-600 text-center mt-10">{errorMessage}</p>;
+  }
 
   return (
     <div className="max-w-xl mx-auto mt-10 p-6 bg-white text-gray-700 shadow-md rounded-lg border">
@@ -87,9 +133,6 @@ export default function FeedbackFormPage() {
 
       {status === 'success' && (
         <p className="text-green-600 mt-4">Feedback submitted successfully.</p>
-      )}
-      {status === 'error' && (
-        <p className="text-red-600 mt-4">{errorMessage}</p>
       )}
     </div>
   );
