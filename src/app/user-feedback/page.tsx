@@ -95,7 +95,6 @@ function FeedbackFormContent() {
     }
   };
 
-  // ✅ Don't show form if token is invalid
   if (status === 'error') {
     return <p className="text-red-600 text-center mt-10">{errorMessage}</p>;
   }

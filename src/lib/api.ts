@@ -1,10 +1,8 @@
 "use client";
 import api from './axios';
 import { Invitation, FeedbackStatus, Feedback } from './types';
-import { mockInvitations } from './mock-data';
 import { InvitationStatus, UserRole } from './enums';
 
-// API functions
 
 export const loginUser = async (credentials: { email: string; password: string }) => {
   const response = await api.post('/auth/login', credentials);
@@ -21,7 +19,7 @@ export const getProfile = async () => {
     },
   });
 
-  return response.data;
+  return response.data as { message: string; email: string };
 };
 
 
@@ -157,30 +155,64 @@ export const getAdminUsers = async () => {
   }));
 };
 
-
-// Invitation functions
-export const getInvitations = async () => {
-  await new Promise(resolve => setTimeout(resolve, 600));
-  return mockInvitations;
+export const createInvitation = async (email: string): Promise<{ message: string; token: string }> => {
+  const token = localStorage.getItem("auth-token");
+  const response = await api.post('/invitation/send', 
+    { email },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data as { message: string; token: string };
 };
 
-export const createInvitation = async (email: string) => {
-  await new Promise(resolve => setTimeout(resolve, 800));
+function getExpirationDate(createdAt: string): string {
+  const expirationDate = new Date(createdAt);
+  expirationDate.setDate(expirationDate.getDate() + 7); 
+  return expirationDate.toISOString();
+}
+
+export const getInvitations = async (): Promise<Invitation[]> => {
+  const token = localStorage.getItem("auth-token");
+  const response = await api.get('/invitation', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   
-  // Check if already invited
-  if (mockInvitations.some(inv => inv.email === email && inv.status === 'pending')) {
-    throw new Error('User already invited');
+  const invitations = response.data as any[];
+  
+  // Transform the data to match frontend expectations
+  return invitations.map((invitation: any) => ({
+    ...invitation,
+    id: invitation._id || invitation.id,
+    status: getInvitationStatus(invitation),
+    expires: getExpirationDate(invitation.createdAt),
+  }));
+};
+
+
+export const validateInvitationToken = async (token: string): Promise<{ message: string; email: string }> => {
+  const response = await api.get(`/invitations/validate/${token}`);
+  return response.data as { message: string; email: string };
+};
+
+
+function getInvitationStatus(invitation: any): InvitationStatus{
+  if (invitation.used) {
+    return InvitationStatus.ACCEPTED;
   }
   
-  const newInvitation: Invitation = {
-    id: `inv-${Date.now()}`,
-    email,
-    token: `token-${Math.random().toString(36).substring(2, 10)}`,
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-    createdAt: new Date().toISOString(),
-    createdBy: '1',
-    status: InvitationStatus.PENDING,
-  };
-   
-  return newInvitation;
-};
+  const expirationDate = new Date(invitation.createdAt);
+  expirationDate.setDate(expirationDate.getDate() + 7);
+  
+  if (new Date() > expirationDate) {
+    return InvitationStatus.EXPIRED;
+  }
+  
+  return InvitationStatus.PENDING;
+}
+
