@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, User, UserX, UserCheck } from "lucide-react";
-import { Feedback, FeedbackStatus } from "@/lib/types";
+import { Feedback, FeedbackStatus, User as UserType } from "@/lib/types";
 import { getFeedbackById, updateFeedbackStatus, assignFeedback, getAdminUsers } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,7 +22,7 @@ export default function FeedbackDetailsPage() {
   const { toast } = useToast();
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(true);
-  const [adminUsers, setAdminUsers] = useState<{ id: string; name: string }[]>([]);
+ const [adminUsers, setAdminUsers] = useState<UserType[]>([]);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [assigneeUpdating, setAssigneeUpdating] = useState(false);
 
@@ -37,9 +37,11 @@ useEffect(() => {
       setFeedback(feedbackData);
 
       setAdminUsers(
-        admins.map((user: any) => ({
-          id: user._id,              
-          name: user.name || user.email, 
+        admins.map((admin: UserType) => ({
+          id: admin.id,
+          name: admin.name,
+          email: admin.email ?? "",
+          role: admin.role ?? "admin"
         }))
       );
     } catch (error) {

@@ -40,7 +40,7 @@ function FeedbackFormContent() {
 
       try {
         await axios.get(`/api/invitations/validate/${token}`);
-      } catch (err) {
+      } catch {
         setStatus('error');
         setErrorMessage('This feedback link is invalid or has already been used.');
       }

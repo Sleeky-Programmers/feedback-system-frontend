@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import {MessageSquare, CheckCircle, XCircle, Clock, UserPlus, ArrowRight,} from "lucide-react";
 import { useEffect, useState } from "react";
 import { getFeedbackStats, getProfile } from "@/lib/api";
+import { User } from "@/lib/types";
 
 export default function DashboardPage() {
-   const [profile, setProfile] = useState<any>(null);
+   const [profile, setProfile] = useState<User | null>(null);
    const [stats, setStats] = useState({
     totalFeedback: 0,
     pending: 0,
@@ -37,9 +38,9 @@ export default function DashboardPage() {
     const fetchProfile = async () => {
       try {
         const data = await getProfile();
-        setProfile(data);
+        setProfile(data.User);
       } catch (err) {
-        
+        alert(err);
       }
     };
 

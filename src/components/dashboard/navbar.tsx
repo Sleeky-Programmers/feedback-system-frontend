@@ -16,7 +16,9 @@ export function Navbar() {
     const fetchProfile = async () => {
       try {
         const data = await getProfile();
-        setProfile(data as { email: string; role: string });
+        if (data && data.User) {
+          setProfile({ email: data.User.email, role: data.User.role });
+        }
       } catch (err) {
         console.error("Failed to fetch profile", err);
       }
