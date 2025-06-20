@@ -213,9 +213,9 @@ const handleAssigneeChange = async (assignee: string, feedbackId: string) => {
       <SelectValue placeholder="Select a status" />
     </SelectTrigger>
     <SelectContent className="z-50"> 
-     <SelectItem value="pending">Pending</SelectItem>
-    <SelectItem value="addressed">Addressed</SelectItem>
-    <SelectItem value="unresolved">Unresolved</SelectItem>
+    <SelectItem value={FeedbackStatus.PENDING}>Pending</SelectItem>
+    <SelectItem value={FeedbackStatus.ADDRESSED}>Addressed</SelectItem>
+    <SelectItem value={FeedbackStatus.UNRESOLVED}>Unresolved</SelectItem>
 
     </SelectContent>
   </Select>
