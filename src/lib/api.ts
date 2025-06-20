@@ -19,9 +19,13 @@ export const getProfile = async () => {
     },
   });
 
-  return response.data as {User: { email: string; role: UserRole; id: string; name:string } };
+  return response.data as {
+    email: string;
+    role: UserRole;
+    id: string;
+    name: string;
+  };
 };
-
 
 export async function getFeedbackStats(): Promise<{
   totalFeedback: number;
@@ -125,8 +129,8 @@ export const updateFeedbackStatus = async (id: string, status: FeedbackStatus) =
 
 export const assignFeedback = async (feedbackId: string, assignee: string) => {
   const token = localStorage.getItem("auth-token");
-  const res = await api.post(
-    "/feedback/assign",
+  const res = await api.patch(
+    "/feedback/assign", 
     { feedbackId, assignee },
     {
       headers: {
@@ -135,7 +139,7 @@ export const assignFeedback = async (feedbackId: string, assignee: string) => {
       },
     }
   );
-  return res.data; 
+  return res.data;
 };
 
 

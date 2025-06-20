@@ -9,7 +9,7 @@ import { getFeedbackStats, getProfile } from "@/lib/api";
 import { User } from "@/lib/types";
 
 export default function DashboardPage() {
-   const [profile, setProfile] = useState<User | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
    const [stats, setStats] = useState({
     totalFeedback: 0,
     pending: 0,
@@ -34,18 +34,21 @@ export default function DashboardPage() {
     fetchStats();
   }, []);
 
-   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile();
-        setProfile(data.User);
-      } catch (err) {
-        alert(err);
-      }
-    };
+useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const data = await getProfile();
+      setProfile(data);
 
-    fetchProfile();
-  }, []);
+    } catch {
+      
+      alert("Failed to fetch profile. Please log in again."); 
+    }
+  };
+
+  fetchProfile();
+}, []);
+
    if (!profile) return <p>Loading...</p>;
 
   return (
