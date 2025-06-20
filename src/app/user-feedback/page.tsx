@@ -24,6 +24,7 @@ export default function FeedbackFormPage() {
 function FeedbackFormContent() {
   const [content, setContent] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -40,7 +41,7 @@ function FeedbackFormContent() {
 
       try {
         await axios.get(`/api/invitations/validate/${token}`);
-      } catch (err) {
+      } catch {
         setStatus('error');
         setErrorMessage('This feedback link is invalid or has already been used.');
       }
@@ -62,6 +63,12 @@ function FeedbackFormContent() {
       return;
     }
 
+    if (!isAnonymous && !userEmail.trim()) {
+      setStatus('error');
+      setErrorMessage('Please provide your email address or submit anonymously.');
+      return;
+    }
+
     try {
       setSubmitting(true);
       setStatus('idle');
@@ -70,11 +77,13 @@ function FeedbackFormContent() {
         token,
         message: content,
         isAnonymous,
+        email: isAnonymous ? undefined : userEmail.trim(),
       });
 
       if (response.status === 200) {
         setStatus('success');
         setContent('');
+        setUserEmail('');
         setIsAnonymous(false);
       } else {
         setStatus('error');
@@ -111,7 +120,7 @@ function FeedbackFormContent() {
         onChange={(e) => setContent(e.target.value)}
       />
 
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-3">
         <input
           type="checkbox"
           checked={isAnonymous}
@@ -122,6 +131,16 @@ function FeedbackFormContent() {
           Submit anonymously
         </label>
       </div>
+
+      {!isAnonymous && (
+        <input
+          type="email"
+          value={userEmail}
+          onChange={(e) => setUserEmail(e.target.value)}
+          placeholder="Your email address"
+          className="w-full border p-3 rounded mb-3"
+        />
+      )}
 
       <button
         disabled={submitting}

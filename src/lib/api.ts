@@ -1,6 +1,6 @@
 "use client";
 import api from './axios';
-import { Invitation, FeedbackStatus, Feedback } from './types';
+import { Invitation, FeedbackStatus, Feedback, User } from './types';
 import { InvitationStatus, UserRole } from './enums';
 
 
@@ -19,9 +19,13 @@ export const getProfile = async () => {
     },
   });
 
-  return response.data as { message: string; email: string };
+  return response.data as {
+    email: string;
+    role: UserRole;
+    id: string;
+    name: string;
+  };
 };
-
 
 export async function getFeedbackStats(): Promise<{
   totalFeedback: number;
@@ -52,14 +56,14 @@ export const getAllFeedback = async (status?: string): Promise<Feedback[]> => {
     },
   });
 
-  const rawData = response.data as any[];
+  const rawData = response.data as Feedback[];
 
-  return rawData.map((item: any): Feedback => ({
-    id: item._id,
+  return rawData.map((item: Feedback): Feedback => ({
+    id: item.id,
     message: item.message ?? "",
 
     status: item.status,
-    isAnonymous: item.anonymous ?? item.isAnonymous ?? false,
+    isAnonymous: item.isAnonymous ?? item.isAnonymous ?? false,
 
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
@@ -67,7 +71,7 @@ export const getAllFeedback = async (status?: string): Promise<Feedback[]> => {
     createdBy: item.email ?? undefined,
     assignee: item.assignee
       ? {
-          id: item.assignee?._id ?? item.assigneeId ?? "unknown",
+          id: item.assignee?.id ?? item.assignee ?? "unknown",
           name: item.assignee?.name ?? item.assignee,
           email: item.assignee?.email ?? "unknown",
           role: item.assignee?.role ?? "user",
@@ -85,19 +89,19 @@ export const getFeedbackById = async (id: string): Promise<Feedback> => {
     },
   });
 
-  const item = response.data as any;
+  const item = response.data as Feedback;
 
   return {
-    id: item._id,
+    id: item.id,
     message: item.message ?? "",
     status: item.status,
-    isAnonymous: item.asAonymous ?? item.isAnonymous ?? false,
+    isAnonymous: item.isAnonymous ?? item.isAnonymous ?? false,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
     createdBy: item.email ?? undefined,
     assignee: item.assignee
       ? {
-          id: item.assignee?._id ?? item.assigneeId ?? "unknown",
+          id: item.assignee?.id ?? item.assignee ?? "unknown",
           name: item.assignee?.name ?? item.assignee,
           email: item.assignee?.email ?? "unknown",
           role: item.assignee?.role ?? "user",
@@ -125,8 +129,8 @@ export const updateFeedbackStatus = async (id: string, status: FeedbackStatus) =
 
 export const assignFeedback = async (feedbackId: string, assignee: string) => {
   const token = localStorage.getItem("auth-token");
-  const res = await api.post(
-    "/feedback/assign",
+  const res = await api.patch(
+    "/feedback/assign", 
     { feedbackId, assignee },
     {
       headers: {
@@ -135,7 +139,7 @@ export const assignFeedback = async (feedbackId: string, assignee: string) => {
       },
     }
   );
-  return res.data; 
+  return res.data;
 };
 
 
@@ -148,10 +152,12 @@ export const getAdminUsers = async () => {
       Authorization: `Bearer ${token}` },
   });
 
-  const users = response.data as any[];
-  return users.map((user: any) => ({
-    id: user._id,
-    name: user.email, 
+  const users = response.data as User[];
+  return users.map((user: User) => ({
+     id: user.id || (user as User).id,
+    name: user.name || user.email,
+     email: user.email,
+    role: user.role ?? UserRole.ADMIN,
   }));
 };
 
@@ -183,12 +189,12 @@ export const getInvitations = async (): Promise<Invitation[]> => {
     },
   });
   
-  const invitations = response.data as any[];
+  const invitations = response.data as Invitation[];
   
   // Transform the data to match frontend expectations
-  return invitations.map((invitation: any) => ({
+  return invitations.map((invitation: Invitation) => ({
     ...invitation,
-    id: invitation._id || invitation.id,
+    id: invitation.id || invitation.id,
     status: getInvitationStatus(invitation),
     expires: getExpirationDate(invitation.createdAt),
   }));
@@ -201,8 +207,8 @@ export const validateInvitationToken = async (token: string): Promise<{ message:
 };
 
 
-function getInvitationStatus(invitation: any): InvitationStatus{
-  if (invitation.used) {
+function getInvitationStatus(invitation: Invitation): InvitationStatus{
+  if (invitation.status === InvitationStatus.ACCEPTED) {
     return InvitationStatus.ACCEPTED;
   }
   

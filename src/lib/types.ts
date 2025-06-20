@@ -17,6 +17,7 @@ export interface User {
     createdBy?: string;
     assignee?: User;
     updatedAt: string;
+    email?: string;
   }
   
   export interface Invitation {

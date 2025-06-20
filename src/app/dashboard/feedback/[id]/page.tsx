@@ -5,13 +5,13 @@ import { useRouter, useParams } from "next/navigation";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/feedback/status-badge";
+import { StatusBadge } from "@/components/dashboard/feedback/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, User, UserX, UserCheck } from "lucide-react";
-import { Feedback, FeedbackStatus } from "@/lib/types";
+import { Feedback, FeedbackStatus, User as UserType } from "@/lib/types";
 import { getFeedbackById, updateFeedbackStatus, assignFeedback, getAdminUsers } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,7 +22,7 @@ export default function FeedbackDetailsPage() {
   const { toast } = useToast();
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(true);
-  const [adminUsers, setAdminUsers] = useState<{ id: string; name: string }[]>([]);
+ const [adminUsers, setAdminUsers] = useState<UserType[]>([]);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [assigneeUpdating, setAssigneeUpdating] = useState(false);
 
@@ -37,9 +37,11 @@ useEffect(() => {
       setFeedback(feedbackData);
 
       setAdminUsers(
-        admins.map((user: any) => ({
-          id: user._id,              
-          name: user.name || user.email, 
+        admins.map((admin: UserType) => ({
+          id: admin.id,
+          name: admin.name,
+          email: admin.email ?? "",
+          role: admin.role ?? "admin"
         }))
       );
     } catch (error) {
@@ -63,8 +65,10 @@ useEffect(() => {
     
     setStatusUpdating(true);
     try {
-      const updatedFeedback = await updateFeedbackStatus(feedback.id, newStatus);
-      setFeedback(updatedFeedback as Feedback);
+     await updateFeedbackStatus(feedback.id, newStatus);
+      const refreshedFeedback = await getFeedbackById(feedback.id);
+      setFeedback(refreshedFeedback);
+
       toast({
         title: "Status updated",
         description: `Feedback status has been updated to ${newStatus}`,
@@ -87,6 +91,16 @@ const handleAssigneeChange = async (assignee: string, feedbackId: string) => {
   setAssigneeUpdating(true);
   try {
     await assignFeedback(feedbackId, assignee === "unassigned" ? "" : assignee);
+    
+    if (assignee === "unassigned") {
+      setFeedback(prev => prev ? { ...prev, assignee: undefined } : null);
+    } else {
+      const selectedAdmin = adminUsers.find(admin => admin.id === assignee);
+      if (selectedAdmin) {
+        setFeedback(prev => prev ? { ...prev, assignee: selectedAdmin } : null);
+      }
+    }
+    
     const refreshedFeedback = await getFeedbackById(feedbackId);
     setFeedback(refreshedFeedback);
 
@@ -97,8 +111,7 @@ const handleAssigneeChange = async (assignee: string, feedbackId: string) => {
         : "Feedback has been assigned successfully",
     });
     
-  } catch (error) {
-    console.error("Failed to update assignee:", error);
+  } catch {
     toast({
       title: "Error",
       description: "Failed to update assignee",
@@ -108,7 +121,6 @@ const handleAssigneeChange = async (assignee: string, feedbackId: string) => {
     setAssigneeUpdating(false);
   }
 };
-
 
   if (loading) {
     return (
@@ -192,45 +204,47 @@ const handleAssigneeChange = async (assignee: string, feedbackId: string) => {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Status</h3>
-              <Select
-   onValueChange={handleStatusChange} defaultValue={feedback.status} disabled={statusUpdating}
-  >
+            <Select
+  value={feedback.status}
+  onValueChange={(value) => handleStatusChange(value as FeedbackStatus)}
+  disabled={statusUpdating}
+>
     <SelectTrigger className="w-full">
       <SelectValue placeholder="Select a status" />
     </SelectTrigger>
     <SelectContent className="z-50"> 
-      <SelectItem value="pending">Pending</SelectItem>
-      <SelectItem value="addressed">Addressed</SelectItem>
-      <SelectItem value="unresolved">Unresolved</SelectItem>
+    <SelectItem value={FeedbackStatus.PENDING}>Pending</SelectItem>
+    <SelectItem value={FeedbackStatus.ADDRESSED}>Addressed</SelectItem>
+    <SelectItem value={FeedbackStatus.UNRESOLVED}>Unresolved</SelectItem>
+
     </SelectContent>
   </Select>
             </div>
             
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Assigned To</h3>
-              <Select
-            disabled={assigneeUpdating}
-            value={typeof feedback.assignee === "string"
-              ? feedback.assignee
-              : feedback.assignee?.id || "unassigned"}
-            onValueChange={(value) => {
-            handleAssigneeChange(value === "unassigned" ? "" : value, feedback.id);
-            }}
-        >
-            <SelectTrigger className="w-full">
-            <SelectValue placeholder="Assign to admin" />
-            </SelectTrigger>
-            <SelectContent className="z-50">
-            <SelectItem value="unassigned">Unassigned</SelectItem>
-          {adminUsers.map((admin, index) => (
-        <SelectItem key={admin.id || index} value={admin.id}>
-          {admin.name}
-        </SelectItem>
-      ))}
-
-            </SelectContent>
-        </Select>
-
+<Select
+  disabled={assigneeUpdating}
+  value={feedback.assignee?.id || "unassigned"}
+  onValueChange={(value) => handleAssigneeChange(value, feedback.id)}
+>
+  <SelectTrigger className="w-full">
+    <SelectValue placeholder="Assign to admin">
+      {feedback.assignee?.id 
+        ? adminUsers.find(admin => admin.id === feedback.assignee?.id)?.name || "Unknown Admin"
+        : "Unassigned"
+      }
+    </SelectValue>
+  </SelectTrigger>
+  <SelectContent className="z-50">
+    <SelectItem value="unassigned">Unassigned</SelectItem>
+    {adminUsers.map((admin) => (
+      <SelectItem key={admin.id} value={admin.id}>
+        {admin.name}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
             </div>
           </div>
           
