@@ -161,10 +161,10 @@ export const getAdminUsers = async () => {
   }));
 };
 
-export const createInvitation = async (email: string): Promise<{ message: string; token: string }> => {
+export const createInvitation = async (emails: string[]): Promise<{ message: string; token: string }> => {
   const token = localStorage.getItem("auth-token");
   const response = await api.post('/invitation/send', 
-    { email },
+    { emails },
     {
       headers: {
         'Content-Type': 'application/json',
