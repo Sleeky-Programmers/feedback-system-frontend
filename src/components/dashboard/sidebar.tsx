@@ -38,7 +38,7 @@ export function Sidebar({ className }: SidebarProps) {
     },
     {
       title: "Invitations",
-      href: "/dashboard/invitations",
+      href: "/dashboard/invitation",
       icon: <Mail className="h-5 w-5" />,
     },
   ];

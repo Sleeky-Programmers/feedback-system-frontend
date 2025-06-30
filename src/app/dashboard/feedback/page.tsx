@@ -6,12 +6,12 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/components/feedback/status-badge";
+import { StatusBadge } from "@/components/dashboard/feedback/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRight, Search, User, UserX } from "lucide-react";
 import { Feedback, FeedbackStatus } from "@/lib/types";
-import { getFeedbackList } from "@/lib/api";
+import { getAllFeedback } from "@/lib/api";
 
 export default function FeedbackPage() {
   const [feedback, setFeedback] = useState<Feedback[]>([]);
@@ -20,39 +20,40 @@ export default function FeedbackPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<FeedbackStatus | "all">("all");
 
-  useEffect(() => {
-    const loadFeedback = async () => {
-      try {
-        const data = await getFeedbackList();
-        setFeedback(data);
-        setFilteredFeedback(data);
-      } catch (error) {
-        console.error("Failed to load feedback:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFeedback();
-  }, []);
-
-  useEffect(() => {
-    let result = [...feedback];
-    
-    if (activeTab !== "all") {
-      result = result.filter(item => item.status === activeTab);
+useEffect(() => {
+  const loadFeedback = async () => {
+    setLoading(true);
+    try {
+      const data = await getAllFeedback(activeTab !== "all" ? activeTab : undefined) as Feedback[];
+      setFeedback(data);
+      setFilteredFeedback(data);
+    } catch (error) {
+      console.error("Failed to load feedback:", error);
+    } finally {
+      setLoading(false);
     }
-    
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(item => 
-        item.content.toLowerCase().includes(query) ||
-        (!item.anonymous && item.createdByUser?.name.toLowerCase().includes(query))
-      );
-    }
-    
-    setFilteredFeedback(result);
-  }, [feedback, activeTab, searchQuery]);
+  };
+
+  loadFeedback();
+}, [activeTab]);
+
+
+useEffect(() => {
+  const result = feedback.filter((item) => {
+    const query = searchQuery.toLowerCase();
+
+    const message = item?.message?.toLowerCase() || "";
+    const createdBy = item?.createdBy?.toLowerCase?.() || "";
+
+    return (
+      message.includes(query) ||
+      (!item.isAnonymous && createdBy.includes(query))
+    );
+  });
+
+  setFilteredFeedback(result);
+}, [searchQuery, feedback]);
+
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as FeedbackStatus | "all");
@@ -113,15 +114,17 @@ export default function FeedbackPage() {
                   <p className="text-muted-foreground">No feedback items found.</p>
                 </div>
               ) : (
-                filteredFeedback.map((item) => (
-                  <div 
-                    key={item.id}
+                filteredFeedback.map((item, index) => {
+  if (!item || !item.message) return null;
+
+  return (
+    <div key={item.id || index}
                     className="group shadow-sm rounded-lg p-4 transition-all hover:border-primary/50 hover:bg-primary/5"
                   >
                     <div className="flex flex-col gap-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          {item.anonymous ? (
+                          {item.isAnonymous ? (
                             <div className="flex items-center text-muted-foreground">
                               <UserX className="h-4 w-4 mr-1" />
                               <span className="text-sm">Anonymous</span>
@@ -129,7 +132,7 @@ export default function FeedbackPage() {
                           ) : (
                             <div className="flex items-center">
                               <User className="h-4 w-4 mr-1" />
-                              <span className="text-sm font-medium">{item.createdByUser?.name}</span>
+                              <span className="text-sm font-medium">{item?.createdBy?.toLowerCase?.() || ""}</span>
                             </div>
                           )}
                           <span className="text-xs text-muted-foreground">
@@ -140,7 +143,7 @@ export default function FeedbackPage() {
                       </div>
                       
                       <p className="line-clamp-2 text-sm">
-                        {item.content}
+                        {item.message}
                       </p>
                       
                       <div className="flex items-center justify-between mt-1">
@@ -160,7 +163,9 @@ export default function FeedbackPage() {
                       </div>
                     </div>
                   </div>
-                ))
+   
+  );
+})
               )}
             </TabsContent>
           </Tabs>

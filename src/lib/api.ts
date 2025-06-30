@@ -1,10 +1,8 @@
 "use client";
 import api from './axios';
-import { Invitation, FeedbackStatus } from './types';
-import { mockFeedback, mockInvitations, mockUsers } from './mock-data';
-import { InvitationStatus } from './enums';
+import { Invitation, FeedbackStatus, Feedback, User } from './types';
+import { InvitationStatus, UserRole } from './enums';
 
-// API functions
 
 export const loginUser = async (credentials: { email: string; password: string }) => {
   const response = await api.post('/auth/login', credentials);
@@ -21,9 +19,13 @@ export const getProfile = async () => {
     },
   });
 
-  return response.data;
+  return response.data as {
+    email: string;
+    role: UserRole;
+    id: string;
+    name: string;
+  };
 };
-
 
 export async function getFeedbackStats(): Promise<{
   totalFeedback: number;
@@ -44,100 +46,179 @@ export async function getFeedbackStats(): Promise<{
   return res.json();
 }
 
-// Feedback functions
-export const getFeedbackList = async (filters?: { status?: FeedbackStatus }) => {
-  await new Promise(resolve => setTimeout(resolve, 600));
-  
-  let result = [...mockFeedback];
-  
-  if (filters?.status) {
-    result = result.filter(item => item.status === filters.status);
-  }
-  
-  return result;
+export const getAllFeedback = async (status?: string): Promise<Feedback[]> => {
+  const token = localStorage.getItem("auth-token");
+  const query = status ? `?status=${status}` : "";
+
+  const response = await api.get(`/feedback${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const rawData = response.data as Feedback[];
+
+  return rawData.map((item: Feedback): Feedback => ({
+    id: item.id,
+    message: item.message ?? "",
+
+    status: item.status,
+    isAnonymous: item.isAnonymous ?? item.isAnonymous ?? false,
+
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+
+    createdBy: item.email ?? undefined,
+    assignee: item.assignee
+      ? {
+          id: item.assignee?.id ?? item.assignee ?? "unknown",
+          name: item.assignee?.name ?? item.assignee,
+          email: item.assignee?.email ?? "unknown",
+          role: item.assignee?.role ?? "user",
+        }
+      : undefined,
+  }));
 };
 
-export const getFeedbackById = async (id: string) => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const feedback = mockFeedback.find(f => f.id === id);
-  if (!feedback) {
-    throw new Error('Feedback not found');
-  }
-  
-  return feedback;
+export const getFeedbackById = async (id: string): Promise<Feedback> => {
+  const token = localStorage.getItem("auth-token");
+
+  const response = await api.get(`/feedback/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const item = response.data as Feedback;
+
+  return {
+    id: item.id,
+    message: item.message ?? "",
+    status: item.status,
+    isAnonymous: item.isAnonymous ?? item.isAnonymous ?? false,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    createdBy: item.email ?? undefined,
+    assignee: item.assignee
+      ? {
+          id: item.assignee?.id ?? item.assignee ?? "unknown",
+          name: item.assignee?.name ?? item.assignee,
+          email: item.assignee?.email ?? "unknown",
+          role: item.assignee?.role ?? "user",
+        }
+      : undefined,
+  };
 };
 
 export const updateFeedbackStatus = async (id: string, status: FeedbackStatus) => {
-  await new Promise(resolve => setTimeout(resolve, 700));
-  
-  const feedbackIndex = mockFeedback.findIndex(f => f.id === id);
-  if (feedbackIndex === -1) {
-    throw new Error('Feedback not found');
-  }
-  
-  const updatedFeedback = {
-    ...mockFeedback[feedbackIndex],
-    status,
-    updatedAt: new Date().toISOString(),
-  };
-  
-  
-  return updatedFeedback;
+  const token = localStorage.getItem("auth-token");
+
+  const res = await api.patch(
+    `/feedback/${id}/status`,
+    { status },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return res.data;
 };
 
-export const assignFeedback = async (id: string, assigneeId: string) => {
-  await new Promise(resolve => setTimeout(resolve, 700));
-  
-  const feedbackIndex = mockFeedback.findIndex(f => f.id === id);
-  if (feedbackIndex === -1) {
-    throw new Error('Feedback not found');
-  }
-  
-  const assignee = mockUsers.find(u => u.id === assigneeId);
-  if (!assignee) {
-    throw new Error('User not found');
-  }
-  
-  const updatedFeedback = {
-    ...mockFeedback[feedbackIndex],
-    assigneeId,
-    assignee,
-    updatedAt: new Date().toISOString(),
-  };
-  
-  return updatedFeedback;
+export const assignFeedback = async (feedbackId: string, assignee: string) => {
+  const token = localStorage.getItem("auth-token");
+  const res = await api.patch(
+    "/feedback/assign", 
+    { feedbackId, assignee },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return res.data;
 };
 
-// User functions
+
 export const getAdminUsers = async () => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockUsers.filter(user => user.role === 'admin');
+  const token = localStorage.getItem('auth-token');
+
+  const response = await api.get('/users', {
+    params: { role: UserRole.ADMIN },
+    headers: {
+      Authorization: `Bearer ${token}` },
+  });
+
+  const users = response.data as User[];
+  return users.map((user: User) => ({
+     id: user.id || (user as User).id,
+    name: user.name || user.email,
+     email: user.email,
+    role: user.role ?? UserRole.ADMIN,
+  }));
 };
 
-// Invitation functions
-export const getInvitations = async () => {
-  await new Promise(resolve => setTimeout(resolve, 600));
-  return mockInvitations;
+export const createInvitation = async (emails: string[]): Promise<{ message: string; token: string }> => {
+  const token = localStorage.getItem("auth-token");
+  const response = await api.post('/invitation/send', 
+    { emails },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data as { message: string; token: string };
 };
 
-export const createInvitation = async (email: string) => {
-  await new Promise(resolve => setTimeout(resolve, 800));
+function getExpirationDate(createdAt: string): string {
+  const expirationDate = new Date(createdAt);
+  expirationDate.setDate(expirationDate.getDate() + 7); 
+  return expirationDate.toISOString();
+}
+
+export const getInvitations = async (): Promise<Invitation[]> => {
+  const token = localStorage.getItem("auth-token");
+  const response = await api.get('/invitation', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   
-  // Check if already invited
-  if (mockInvitations.some(inv => inv.email === email && inv.status === 'pending')) {
-    throw new Error('User already invited');
+  const invitations = response.data as Invitation[];
+  
+  // Transform the data to match frontend expectations
+  return invitations.map((invitation: Invitation) => ({
+    ...invitation,
+    id: invitation.id || invitation.id,
+    status: getInvitationStatus(invitation),
+    expires: getExpirationDate(invitation.createdAt),
+  }));
+};
+
+
+export const validateInvitationToken = async (token: string): Promise<{ message: string; email: string }> => {
+  const response = await api.get(`/invitations/validate/${token}`);
+  return response.data as { message: string; email: string };
+};
+
+
+function getInvitationStatus(invitation: Invitation): InvitationStatus{
+  if (invitation.status === InvitationStatus.ACCEPTED) {
+    return InvitationStatus.ACCEPTED;
   }
   
-  const newInvitation: Invitation = {
-    id: `inv-${Date.now()}`,
-    email,
-    token: `token-${Math.random().toString(36).substring(2, 10)}`,
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-    createdAt: new Date().toISOString(),
-    createdBy: '1',
-    status: InvitationStatus.PENDING,
-  };
-   
-  return newInvitation;
-};
+  const expirationDate = new Date(invitation.createdAt);
+  expirationDate.setDate(expirationDate.getDate() + 7);
+  
+  if (new Date() > expirationDate) {
+    return InvitationStatus.EXPIRED;
+  }
+  
+  return InvitationStatus.PENDING;
+}
+

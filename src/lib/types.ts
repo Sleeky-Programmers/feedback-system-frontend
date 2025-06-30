@@ -9,15 +9,15 @@ export interface User {
   
   export interface Feedback {
     id: string;
-    content: string;
+     _id?: string;
+    message: string;
     status: FeedbackStatus;
-    anonymous: boolean;
+    isAnonymous: boolean;
     createdAt: string;
     createdBy?: string;
-    createdByUser?: User;
-    assigneeId?: string;
     assignee?: User;
     updatedAt: string;
+    email?: string;
   }
   
   export interface Invitation {
