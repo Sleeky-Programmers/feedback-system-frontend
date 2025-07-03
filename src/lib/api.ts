@@ -202,8 +202,18 @@ export const getInvitations = async (): Promise<Invitation[]> => {
 
 
 export const validateInvitationToken = async (token: string): Promise<{ message: string; email: string }> => {
-  const response = await api.get(`/invitations/validate/${token}`);
+  const response = await api.get(`/invitation/validate/${token}`);
   return response.data as { message: string; email: string };
+};
+
+export const submitFeedback = async (data: {
+  token: string;
+  message: string;
+  isAnonymous: boolean;
+  email?: string;
+}): Promise<{ message: string }> => {
+  const response = await api.post('/feedback/submit', data);
+  return response.data as { message: string };
 };
 
 

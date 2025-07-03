@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { SettingsSheet } from "./settings-sheet";
-import { NotificationsSheet } from "./notifications-sheet";
 import { getProfile } from "@/lib/api"; 
 
 export function Navbar() {
@@ -51,7 +50,6 @@ export function Navbar() {
           <span className="font-medium">{profile.role}</span>.</h2></span>
             </span>
           )}
-          <NotificationsSheet />
           <SettingsSheet />
         </div>
       </div>

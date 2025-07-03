@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import axios from 'axios';
+import { submitFeedback, validateInvitationToken } from '@/lib/api';
 
 interface CustomError {
   response?: {
@@ -31,78 +31,74 @@ function FeedbackFormContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
-  useEffect(() => {
-    const validateToken = async () => {
-      if (!token) {
-        setStatus('error');
-        setErrorMessage('Invalid or missing token.');
-        return;
-      }
-
-      try {
-        await axios.get(`/api/invitations/validate/${token}`);
-      } catch {
-        setStatus('error');
-        setErrorMessage('This feedback link is invalid or has already been used.');
-      }
-    };
-
-    validateToken();
-  }, [token]);
-
-  const handleSubmit = async () => {
+ useEffect(() => {
+  const validateToken = async () => {
     if (!token) {
       setStatus('error');
       setErrorMessage('Invalid or missing token.');
       return;
     }
 
-    if (!content.trim()) {
-      setStatus('error');
-      setErrorMessage('Feedback cannot be empty.');
-      return;
-    }
-
-    if (!isAnonymous && !userEmail.trim()) {
-      setStatus('error');
-      setErrorMessage('Please provide your email address or submit anonymously.');
-      return;
-    }
-
     try {
-      setSubmitting(true);
-      setStatus('idle');
-
-      const response = await axios.post('/api/feedback/submit', {
-        token,
-        message: content,
-        isAnonymous,
-        email: isAnonymous ? undefined : userEmail.trim(),
-      });
-
-      if (response.status === 200) {
-        setStatus('success');
-        setContent('');
-        setUserEmail('');
-        setIsAnonymous(false);
-      } else {
-        setStatus('error');
-        setErrorMessage('Something went wrong.');
-      }
-    } catch (error: unknown) {
+      await validateInvitationToken(token); 
+    } catch {
       setStatus('error');
-      const errorMsg =
-        (typeof error === 'object' &&
-          error !== null &&
-          'response' in error &&
-          (error as CustomError).response?.data?.message) ||
-        (error as Error).message ||
-        'Server error.';
-      setErrorMessage(errorMsg);
-    } finally {
-      setSubmitting(false);
+      setErrorMessage('This feedback link is invalid or has already been used.');
     }
   };
+
+  validateToken();
+}, [token]);
+
+
+ const handleSubmit = async () => {
+  if (!token) {
+    setStatus('error');
+    setErrorMessage('Invalid or missing token.');
+    return;
+  }
+
+  if (!content.trim()) {
+    setStatus('error');
+    setErrorMessage('Feedback cannot be empty.');
+    return;
+  }
+
+  if (!isAnonymous && !userEmail.trim()) {
+    setStatus('error');
+    setErrorMessage('Please provide your email address or submit anonymously.');
+    return;
+  }
+
+  try {
+    setSubmitting(true);
+    setStatus('idle');
+
+    await submitFeedback({
+      token,
+      message: content,
+      isAnonymous,
+      email: isAnonymous ? undefined : userEmail.trim(),
+    });
+
+    setStatus('success');
+    setContent('');
+    setUserEmail('');
+    setIsAnonymous(false);
+  } catch (error: unknown) {
+    setStatus('error');
+    const errorMsg =
+      (typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        (error as CustomError).response?.data?.message) ||
+      (error as Error).message ||
+      'Server error.';
+    setErrorMessage(errorMsg);
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (status === 'error') {
     return <p className="text-red-600 text-center mt-10">{errorMessage}</p>;
