@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -16,29 +15,41 @@ import {
 import { MailPlus } from "lucide-react";
 
 const inviteSchema = z.object({
-  email: z.string().email({
-    message: "Please enter a valid email address",
-  }),
+  emails: z.string().refine(
+    (value) =>
+      value
+        .split(',')
+        .map((email) => email.trim())
+        .every((email) => z.string().email().safeParse(email).success),
+    { message: "One or more email addresses are invalid" }
+  ),
 });
+
 
 type InviteFormValues = z.infer<typeof inviteSchema>;
 
 interface InvitationFormProps {
-  onSubmit: (email: string) => Promise<void>;
+  onSubmit: (emails: string[]) => Promise<void>;
 }
 
 export function InvitationForm({ onSubmit }: InvitationFormProps) {
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
     defaultValues: {
-      email: "",
+      emails: "",
     },
   });
 
-  const handleSubmit = async (data: InviteFormValues) => {
-    await onSubmit(data.email);
-    form.reset();
-  };
+const handleSubmit = async (data: InviteFormValues) => {
+  const emailList = data.emails
+    .split(',')
+    .map((email) => email.trim())
+    .filter(Boolean);
+
+  await onSubmit(emailList);
+  form.reset();
+};
+
 
   return (
     <Card>
@@ -54,19 +65,24 @@ export function InvitationForm({ onSubmit }: InvitationFormProps) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="member@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+           <FormField
+  control={form.control}
+  name="emails"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Email addresses</FormLabel>
+      <FormControl>
+        <textarea
+          placeholder="Type one or more emails, separated by commas"
+          rows={4}
+          className="w-full border rounded-md p-2"
+          {...field}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
             <button 
               type="submit" 

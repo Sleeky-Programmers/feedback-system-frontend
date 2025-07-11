@@ -148,7 +148,7 @@ useEffect(() => {
             </Alert>
 
             <Button asChild className="w-full">
-              <Link href="/dashboard/invitations">
+              <Link href="/dashboard/invitation">
                 Manage Invitations
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

@@ -128,12 +128,6 @@ export function LoginForm() {
         </form>
       </Form>
 
-      {/* Demo Hint */}
-      <div className="text-center text-sm text-[#6B7280] pt-2">
-        <p>Demo credentials:</p>
-        <p className="text-[#111827]">admin1@example.com</p>
-        <p className="text-[#111827]">@admin123</p>
-      </div>
     </div>
   );
 }

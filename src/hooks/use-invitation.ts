@@ -26,13 +26,13 @@ export function useInvitations() {
     }
   }, [toast]);
 
-  const sendInvitation = async (email: string) => {
+  const sendInvitation = async (emails: string[])=> {
     try {
-      await createInvitation(email);
+      await createInvitation(emails);
       
       toast({
         title: "Invitation sent",
-        description: `Invitation link has been sent to ${email}`,
+        description: `Invitation link has been sent to ${emails}`,
       });
       
       await loadInvitations();
