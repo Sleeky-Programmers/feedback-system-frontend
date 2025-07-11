@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Project Overview
 
-## Getting Started
+    Project Name: Feedback System
 
-First, run the development server:
+    Purpose: Collect, manage, and analyze user feedback for our products/services.
 
-```bash
+    Stack:
+
+        Frontend: Next.js + Tailwind CSS
+
+        Backend: NestJS with MongoDB database
+
+🗂️ Repository Structure
+
+/feedback-system-frontend
+ https://github.com/Sleeky-Programmers/feedback-system-frontend.git
+
+/feedback-system-backend
+ https://github.com/Sleeky-Programmers/feedback-system-backend.git
+
+⚙️ Frontend
+1. Tech Stack
+
+    Framework: Next.js (React)
+    Typescript
+
+    Styling: Tailwind CSS / Styled Components
+
+    API Communication: Axios
+
+2. Main Features
+ 
+    Landing / Admin Login page
+
+    Feedback form (modal/page)
+
+    Admin dashboard for viewing stats: invitations, feedback
+
+    User authentication
+
+
+3. Folder Structure
+
+/feedback-system-frontend/
+└──public/ #Static assets
+/src 
+ ├── app/      # Next.js pages/routes
+ ├── components/           # Reusable ui components
+ ├── hooks/           # Custom hooks
+ ├── lib/             # Type definitions, api functions, constants and helpers
+ ├── utils/           # Helpers & constants
+ ├── styles/          # Global styles
+ └── public/          # Static assets
+
+4. Environment Variables
+Key	Description
+NEXT_PUBLIC_API_BASE_URL	# Base URL for backend API
+
+5. How to Run (Frontend)
+clone the repository
+cd feedback-system-frontend
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+⚙️ Backend
+1. Tech Stack
 
-## Learn More
+    Runtime: Node.js
 
-To learn more about Next.js, take a look at the following resources:
+    Framework: NestJS
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    Database: MongoDB
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    ORM: Mongoose
 
-## Deploy on Vercel
+    Authentication: JWT 
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. Main Features
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    RESTful API for feedback CRUD
+
+    Admin routes for viewing/exporting feedback
+
+    Nodemailer gmail for feedback invitations
+
+    Authentication & authorization
+
+3. Folder Structure
+
+/backend/
+ ├── src/
+ │   ├── common/  # decorators, helpers and utils
+ │   ├── config/   # db config   
+ │   ├── middlewares/      
+ │   ├── modules/   
+ │   ├── schemas/ # database schemas      
+ │   └── seeds/   # admin.seed.ts
+ |   ├── app.controller      
+ │   └── app.module
+ |   ├── app.service      
+ │   └── main.ts  # server file
+ ├── .env  # environment variables
+ ├── package.json
+ └── ...
+
+4. Environment Variables
+Key	Description
+DATABASE_URL	Connection string
+JWT_SECRET	Secret for tokens
+PORT	Server port
+
+EMAIL_USER=email@example.com
+EMAIL_PASS=email_password 
+FRONTEND_URL=frontend_url
+
+5. How to Run (Backend)
+
+cd feedback-system-backend
+npm install
+npm run start
+
+🧪 Testing
+
+    Unit & integration tests: Jest / Supertest
+
+    Linting: ESLint / Prettier
+
+🚀 Deployment
+
+    Frontend: https://feedback-system-frontend-nu.vercel.app/
+
+    Backend: https://feedback-system-backend-neon.vercel.app/api/v1
+
+    Database: Mongodb
+
+📝 Future Improvements
+
+    Analytics dashboard for feedback insights
+
+    Role-based access for admins
+
+    Notifications or Slack integration
