@@ -3,6 +3,17 @@ import api from './axios';
 import { Invitation, FeedbackStatus, Feedback, User } from './types';
 import { InvitationStatus, UserRole } from './enums';
 
+export async function registerOrganization(data: {
+  name: string;
+  description?: string;
+  email: string;
+  password: string;
+}) {
+  console.log("Sending:", data);
+  const response = await api.post('/organizations/register', data);
+  return response.data;
+}
+
 
 export const loginUser = async (credentials: { email: string; password: string }) => {
   const response = await api.post('/auth/login', credentials);
