@@ -1,9 +1,9 @@
 "use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { registerOrganization } from "@/lib/api";
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -47,12 +48,42 @@ export default function RegisterPage() {
           <Input name="name" placeholder="Organization Name" onChange={handleChange} required />
           <Input name="description" placeholder="Description" onChange={handleChange} />
           <Input name="email" type="email" placeholder="Admin Email" onChange={handleChange} required />
-          <Input name="password" type="password" placeholder="Password" onChange={handleChange} required />
+          <div className="relative">
+            <Input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              onClick={() => setShowPassword((prev) => !prev)}
+              tabIndex={-1}
+            >
+              {showPassword ? (
+           <div> <Eye /></div>
+              ) : (
+               
+          <div> <EyeClosed /></div>
+              )}
+            </button>
+          </div>
           <Button type="submit" disabled={loading} className="w-full bg-green-500">
             {loading ? "Registering..." : "Register"}
           </Button>
         </form>
+<div className="text-gray-600 mt-5">
+  <h2>
+    Already have an account?{" "}
+    <a href="/auth/login" className="text-[#2563EB] hover:underline">
+      Login
+    </a>
+  </h2>
+</div>
       </div>
+
     </div>
   );
 }

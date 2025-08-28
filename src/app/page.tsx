@@ -21,7 +21,7 @@ export default function Home() {
           </p>
           <div className="flex gap-4">
             <Button asChild size="lg" className="gap-2 bg-blue-700">
-              <Link href="/register">
+              <Link href="/auth/register">
                 Get Started
                 <ArrowRight size={16} />
               </Link>

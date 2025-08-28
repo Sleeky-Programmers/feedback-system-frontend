@@ -126,8 +126,20 @@ export function LoginForm() {
             )}
           </Button>
         </form>
-      </Form>
+<div className="text-gray-600">
+  <h2>
+  
+</h2>
+    Do not have an account?{" "
+      
+}
 
-    </div>
-  );
+    <a href="/auth/register" className="text-[#2563EB] hover:underline">
+      Register
+    </a>
+      </div>
+      </Form>
+</div>
+);
+
 }

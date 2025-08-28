@@ -9,7 +9,6 @@ export async function registerOrganization(data: {
   email: string;
   password: string;
 }) {
-  console.log("Sending:", data);
   const response = await api.post('/organizations/register', data);
   return response.data;
 }
@@ -17,8 +16,8 @@ export async function registerOrganization(data: {
 
 export const loginUser = async (credentials: { email: string; password: string }) => {
   const response = await api.post('/auth/login', credentials);
-  const data = response.data as { access_token: string };
-  return { success: true, token: data.access_token };
+  const data = response.data as { accessToken: string };
+  return { success: true, token: data.accessToken };
 };
 
 export const getProfile = async () => {
