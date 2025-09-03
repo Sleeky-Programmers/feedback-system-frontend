@@ -3,11 +3,21 @@ import api from './axios';
 import { Invitation, FeedbackStatus, Feedback, User } from './types';
 import { InvitationStatus, UserRole } from './enums';
 
+export async function registerOrganization(data: {
+  name: string;
+  description?: string;
+  email: string;
+  password: string;
+}) {
+  const response = await api.post('/organizations/register', data);
+  return response.data;
+}
+
 
 export const loginUser = async (credentials: { email: string; password: string }) => {
   const response = await api.post('/auth/login', credentials);
-  const data = response.data as { access_token: string };
-  return { success: true, token: data.access_token };
+  const data = response.data as { accessToken: string };
+  return { success: true, token: data.accessToken };
 };
 
 export const getProfile = async () => {
